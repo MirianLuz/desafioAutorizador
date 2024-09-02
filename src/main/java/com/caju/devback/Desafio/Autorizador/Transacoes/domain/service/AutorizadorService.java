@@ -10,21 +10,20 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AutorizadorService {
+
     private final ContaRepository contaRepository;
 
-    public String autorizarTransacao(Transacao transacao){
+    public String autorizarTransacao(Transacao transacao) {
         Conta conta = contaRepository.findById(transacao.getAccoutId())
-                .orElseThrow(() -> new IllegalArgumentException("Conta Não Encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
 
         Categoria categoria = transacao.obterCategoria();
 
-        if(conta.verificarSaldo(categoria, transacao.getAmount())){
+        if (conta.verificarSaldo(categoria, transacao.getAmount())) {
             conta.debitarSaldo(categoria, transacao.getAmount());
             contaRepository.save(conta);
             return "00";
-        }
-
-        else if(conta.verificarSaldo(Categoria.CASH, transacao.getAmount())){
+        } else if (conta.verificarSaldo(Categoria.CASH, transacao.getAmount())) {
             conta.debitarSaldo(Categoria.CASH, transacao.getAmount());
             contaRepository.save(conta);
             return "00";
