@@ -1,31 +1,37 @@
 package com.caju.devback.Desafio.Autorizador.Transacoes.domain;
 
-import lombok.Data;
-import lombok.NonNull;
+import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
 
-@Data
+import java.util.UUID;
+
+@Entity
 @RequiredArgsConstructor
 public class Saldo {
-    @NonNull
+
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @ManyToOne
+    private Conta conta;
     private final Categoria categoria;
 
-    @NonNull
     private double valor;
 
-    public void debitar(double valor){
-        if (valor > 0 && this.valor >= valor){
+    public void debitar(double valor) {
+        if (valor > 0 && this.valor >= valor) {
             this.valor -= valor;
         } else {
-            throw new IllegalArgumentException("Saldo insuficiente ou valor inválido");
+            throw new IllegalArgumentException("Saldo insuficiente ou valor inválido.");
         }
     }
 
-    public void creditar(double valor){
-        if (valor > 0){
+    public void creditar(double valor) {
+        if (valor > 0) {
             this.valor += valor;
         } else {
-            throw new IllegalArgumentException("Valor inválido");
+            throw new IllegalArgumentException("Valor inválido.");
         }
     }
 }

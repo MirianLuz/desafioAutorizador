@@ -1,34 +1,56 @@
 package com.caju.devback.Desafio.Autorizador.Transacoes.domain.service;
 
 import com.caju.devback.Desafio.Autorizador.Transacoes.adapter.output.ContaRepository;
+import com.caju.devback.Desafio.Autorizador.Transacoes.adapter.output.TransacaoRepository;
 import com.caju.devback.Desafio.Autorizador.Transacoes.domain.Categoria;
 import com.caju.devback.Desafio.Autorizador.Transacoes.domain.Conta;
 import com.caju.devback.Desafio.Autorizador.Transacoes.domain.Transacao;
-import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 @Service
-@RequiredArgsConstructor
 public class AutorizadorService {
 
     private final ContaRepository contaRepository;
+    private final TransacaoRepository transacaoRepository;
+
+    @Autowired
+    public AutorizadorService(ContaRepository contaRepository, TransacaoRepository transacaoRepository) {
+        this.contaRepository = contaRepository;
+        this.transacaoRepository = transacaoRepository;
+    }
 
     public String autorizarTransacao(Transacao transacao) {
-        Conta conta = contaRepository.findById(transacao.getAccoutId())
-                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+        Conta conta = contaRepository.findById(transacao.getAccountId())
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
 
-        Categoria categoria = transacao.obterCategoria();
+        Categoria categoria = determinarCategoriaPorMcc(transacao.getMcc());
 
-        if (conta.verificarSaldo(categoria, transacao.getAmount())) {
+        try {
             conta.debitarSaldo(categoria, transacao.getAmount());
             contaRepository.save(conta);
-            return "00";
-        } else if (conta.verificarSaldo(Categoria.CASH, transacao.getAmount())) {
-            conta.debitarSaldo(Categoria.CASH, transacao.getAmount());
-            contaRepository.save(conta);
-            return "00";
-        }
 
-        return "51";
+            transacaoRepository.save(transacao);
+
+            return "00";  // Código de sucesso
+
+        } catch (RuntimeException e) {
+            return "51";  // Código de saldo insuficiente
+        }
+    }
+
+    private Categoria determinarCategoriaPorMcc(String mcc) {
+        switch (mcc) {
+            case "5411":
+            case "5412":
+                return Categoria.FOOD;
+            case "5811":
+            case "5812":
+                return Categoria.MEAL;
+            default:
+                return Categoria.CASH;
+        }
     }
 }

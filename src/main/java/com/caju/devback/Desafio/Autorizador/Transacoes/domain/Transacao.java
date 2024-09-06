@@ -1,37 +1,35 @@
 package com.caju.devback.Desafio.Autorizador.Transacoes.domain;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
+@Entity
+@Table(name = "transacao")
 @Data
-@RequiredArgsConstructor
+@Builder
 public class Transacao {
-    private final UUID id;
-    @NonNull
-    private final UUID accoutId;
 
-    @NonNull
-    private final double amount;
+    @Id
+    @GeneratedValue
+    private UUID id;
 
-    @NonNull
-    private final String merchant;
+    @NotNull(message = "Account ID cannot be null")
+    private UUID accountId;
 
-    @NonNull
-    private final String mcc;
+    @NotNull(message = "Amount cannot be null")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
+    private BigDecimal amount;
 
-    public Categoria obterCategoria(){
-        switch (mcc){
-            case "5411":
-            case "5412":
-                return Categoria.FOOD;
-            case "5811":
-            case "5812":
-                return Categoria.MEAL;
-            default:
-                return Categoria.CASH;
-        }
-    }
+    @NotBlank(message = "MCC cannot be blank")
+    private String mcc;
+
+    @NotBlank(message = "Merchant cannot be blank")
+    private String merchant;
 }
